@@ -46,9 +46,9 @@
 
 	'use strict';
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	__webpack_require__(1);
 
@@ -76,15 +76,15 @@
 
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-	var renderRect = function renderRect(ctx, u, x, y, width, height) {
+	var renderRect = function renderRect(ctx, x, y, width, height) {
 	  ctx.beginPath();
 	  ctx.moveTo(x - width / 2, y - height / 2);
 	  ctx.lineTo(x + width / 2, y - height / 2);
 	  ctx.lineTo(x + width / 2, y + height / 2);
 	  ctx.lineTo(x - width / 2, y + height / 2);
 	  ctx.closePath();
+	  ctx.fill();
 	  ctx.stroke();
-	  ctx.addHitRegion({ id: u });
 	};
 
 	var renderPath = function renderPath(ctx, points) {
@@ -96,7 +96,7 @@
 	  ctx.stroke();
 	};
 
-	var withTransform = function withTransform(ctx, f) {
+	var withContext = function withContext(ctx, f) {
 	  ctx.save();
 	  f();
 	  ctx.restore();
@@ -132,7 +132,214 @@
 	  var scale = Math.min(hScale, vScale);
 	  var x = hScale < vScale ? 0 : (aWidth - lWidth * scale) / 2;
 	  var y = vScale < hScale ? 0 : (aHeight - lHeight * scale) / 2;
-	  return { scale: scale, x: x, y: y };
+	  return { x: x, y: y, k: scale };
+	};
+
+	var diff = function diff(current, next) {
+	  var vertices = Object.keys(next.vertices);
+	  var result = {
+	    vertices: {},
+	    edges: {}
+	  };
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = vertices[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var u = _step.value;
+
+	      if (current.vertices[u]) {
+	        result.vertices[u] = current.vertices[u];
+	      } else {
+	        result.vertices[u] = Object.assign({}, next.vertices[u], {
+	          y: 0
+	        });
+	      }
+	      result.edges[u] = {};
+	      var _iteratorNormalCompletion2 = true;
+	      var _didIteratorError2 = false;
+	      var _iteratorError2 = undefined;
+
+	      try {
+	        for (var _iterator2 = vertices[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	          var v = _step2.value;
+
+	          if (next.edges[u][v]) {
+	            if (current.edges[u] && current.edges[u][v]) {
+	              result.edges[u][v] = current.edges[u][v];
+	            } else if (current.vertices[u]) {
+	              var _current$vertices$u = current.vertices[u],
+	                  x = _current$vertices$u.x,
+	                  y = _current$vertices$u.y,
+	                  width = _current$vertices$u.width;
+	              var points = next.edges[u][v].points;
+
+	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
+	                points: [[x + width / 2, y], [x + width / 2, y], [points[2][0], 0], [points[3][0], 0], [points[4][0], 0], [points[5][0], 0]]
+	              });
+	            } else if (current.vertices[v]) {
+	              var _current$vertices$v = current.vertices[v],
+	                  _x = _current$vertices$v.x,
+	                  _y = _current$vertices$v.y,
+	                  _width = _current$vertices$v.width;
+	              var _points = next.edges[u][v].points;
+
+	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
+	                points: [[_points[0][0], 0], [_points[1][0], 0], [_points[2][0], 0], [_points[3][0], 0], [_x - _width / 2, _y], [_x - _width / 2, _y]]
+	              });
+	            } else {
+	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
+	                points: next.edges[u][v].points.map(function (_ref2) {
+	                  var _ref3 = _slicedToArray(_ref2, 1),
+	                      x = _ref3[0];
+
+	                  return [x, 0];
+	                })
+	              });
+	            }
+	          }
+	        }
+	      } catch (err) {
+	        _didIteratorError2 = true;
+	        _iteratorError2 = err;
+	      } finally {
+	        try {
+	          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	            _iterator2.return();
+	          }
+	        } finally {
+	          if (_didIteratorError2) {
+	            throw _iteratorError2;
+	          }
+	        }
+	      }
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  return result;
+	};
+
+	var interpolate = function interpolate(current, next, r) {
+	  return r > 1 ? next : (next - current) * r + current;
+	};
+
+	var interpolateVertex = function interpolateVertex(current, next, r) {
+	  var properties = ['x', 'y', 'width', 'height'];
+	  var result = {};
+	  var _iteratorNormalCompletion3 = true;
+	  var _didIteratorError3 = false;
+	  var _iteratorError3 = undefined;
+
+	  try {
+	    for (var _iterator3 = properties[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	      var property = _step3.value;
+
+	      result[property] = interpolate(current[property], next[property], r);
+	    }
+	  } catch (err) {
+	    _didIteratorError3 = true;
+	    _iteratorError3 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion3 && _iterator3.return) {
+	        _iterator3.return();
+	      }
+	    } finally {
+	      if (_didIteratorError3) {
+	        throw _iteratorError3;
+	      }
+	    }
+	  }
+
+	  return result;
+	};
+
+	var interpolateEdge = function interpolateEdge(current, next, r) {
+	  return {
+	    width: interpolate(current.width, next.width, r),
+	    points: current.points.map(function (_ref4, i) {
+	      var _ref5 = _slicedToArray(_ref4, 2),
+	          x = _ref5[0],
+	          y = _ref5[1];
+
+	      return [interpolate(x, next.points[i][0], r), interpolate(y, next.points[i][1], r)];
+	    })
+	  };
+	};
+
+	var interpolateLayout = function interpolateLayout(current, next, r) {
+	  var vertices = Object.keys(next.vertices);
+	  var result = {
+	    vertices: {},
+	    edges: {}
+	  };
+	  var _iteratorNormalCompletion4 = true;
+	  var _didIteratorError4 = false;
+	  var _iteratorError4 = undefined;
+
+	  try {
+	    for (var _iterator4 = vertices[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+	      var u = _step4.value;
+
+	      result.vertices[u] = interpolateVertex(current.vertices[u], next.vertices[u], r);
+	      result.edges[u] = {};
+	      var _iteratorNormalCompletion5 = true;
+	      var _didIteratorError5 = false;
+	      var _iteratorError5 = undefined;
+
+	      try {
+	        for (var _iterator5 = vertices[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+	          var v = _step5.value;
+
+	          if (next.edges[u][v]) {
+	            result.edges[u][v] = interpolateEdge(current.edges[u][v], next.edges[u][v], r);
+	          }
+	        }
+	      } catch (err) {
+	        _didIteratorError5 = true;
+	        _iteratorError5 = err;
+	      } finally {
+	        try {
+	          if (!_iteratorNormalCompletion5 && _iterator5.return) {
+	            _iterator5.return();
+	          }
+	        } finally {
+	          if (_didIteratorError5) {
+	            throw _iteratorError5;
+	          }
+	        }
+	      }
+	    }
+	  } catch (err) {
+	    _didIteratorError4 = true;
+	    _iteratorError4 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion4 && _iterator4.return) {
+	        _iterator4.return();
+	      }
+	    } finally {
+	      if (_didIteratorError4) {
+	        throw _iteratorError4;
+	      }
+	    }
+	  }
+
+	  return result;
 	};
 
 	var EgRenderer = function (_window$HTMLElement) {
@@ -157,186 +364,182 @@
 	        y: 0,
 	        k: 1
 	      };
+	      this.highlightedVertex = null;
+	      this.graph = new _graph2.default();
+	      this.layoutResult = { vertices: {}, edges: {} };
+	      this.margin = 10;
 
-	      var zoom = d3.zoom().on('zoom', function () {
+	      this.zoom = d3.zoom().on('zoom', function () {
 	        Object.assign(_this2.transform, d3.event.transform);
 	      });
-	      d3.select(canvas).call(zoom);
+	      d3.select(this.canvas).call(this.zoom);
 
 	      this.canvas.addEventListener('mousemove', function (event) {
-	        if (event.region != null) {
-	          _this2.canvas.style.cursor = 'pointer';
-	        } else {
+	        if (event.region == null) {
 	          _this2.canvas.style.cursor = 'move';
+	          _this2.highlightedVertex = null;
+	        } else {
+	          _this2.canvas.style.cursor = 'pointer';
+	          _this2.highlightedVertex = event.region;
 	        }
 	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render(graphData) {
-	      var _this3 = this;
 
-	      var graph = new _graph2.default();
-	      var _iteratorNormalCompletion = true;
-	      var _didIteratorError = false;
-	      var _iteratorError = undefined;
-
-	      try {
-	        for (var _iterator = graphData.vertices[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	          var _step$value = _step.value,
-	              _u2 = _step$value.u,
-	              d = _step$value.d;
-
-	          graph.addVertex(_u2, d);
-	        }
-	      } catch (err) {
-	        _didIteratorError = true;
-	        _iteratorError = err;
-	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion && _iterator.return) {
-	            _iterator.return();
-	          }
-	        } finally {
-	          if (_didIteratorError) {
-	            throw _iteratorError;
-	          }
-	        }
-	      }
-
-	      var _iteratorNormalCompletion2 = true;
-	      var _didIteratorError2 = false;
-	      var _iteratorError2 = undefined;
-
-	      try {
-	        for (var _iterator2 = graphData.edges[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	          var _step2$value = _step2.value,
-	              _u3 = _step2$value.u,
-	              v = _step2$value.v,
-	              d = _step2$value.d;
-
-	          graph.addEdge(_u3, v, d);
-	        }
-	      } catch (err) {
-	        _didIteratorError2 = true;
-	        _iteratorError2 = err;
-	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-	            _iterator2.return();
-	          }
-	        } finally {
-	          if (_didIteratorError2) {
-	            throw _iteratorError2;
-	          }
-	        }
-	      }
-
-	      var layouter = new _sugiyama2.default().vertexWidth(function () {
-	        return 140;
-	      }).vertexHeight(function () {
-	        return 20;
-	      }).layerMargin(50).vertexMargin(30);
-	      var layout = layouter.layout(graph);
-	      var margin = 10;
-
-	      var _layoutRect = layoutRect(layout),
-	          layoutWidth = _layoutRect.layoutWidth,
-	          layoutHeight = _layoutRect.layoutHeight;
-
-	      var _centerTransform = centerTransform(layoutWidth, layoutHeight, this.canvas.width, this.canvas.height, margin),
-	          scale = _centerTransform.scale,
-	          x = _centerTransform.x,
-	          y = _centerTransform.y;
-
-	      var ctx = this.canvas.getContext('2d');
 	      var render = function render() {
-	        window.requestAnimationFrame(render);
+	        var now = new Date();
+	        var r = (now - _this2.layoutTime) / 500;
+	        var layout = interpolateLayout(_this2.previousLayoutResult, _this2.layoutResult, r);
+	        var ctx = _this2.canvas.getContext('2d');
 	        ctx.resetTransform();
-	        ctx.clearRect(0, 0, _this3.canvas.width, _this3.canvas.height);
-	        ctx.translate(_this3.transform.x, _this3.transform.y);
-	        ctx.scale(_this3.transform.k, _this3.transform.k);
-	        ctx.translate(margin, margin);
-	        ctx.translate(x, y);
-	        ctx.scale(scale, scale);
-	        var _iteratorNormalCompletion3 = true;
-	        var _didIteratorError3 = false;
-	        var _iteratorError3 = undefined;
+	        ctx.clearRect(0, 0, _this2.canvas.width, _this2.canvas.height);
+	        ctx.translate(_this2.transform.x, _this2.transform.y);
+	        ctx.scale(_this2.transform.k, _this2.transform.k);
+	        ctx.translate(_this2.margin, _this2.margin);
+	        var _iteratorNormalCompletion6 = true;
+	        var _didIteratorError6 = false;
+	        var _iteratorError6 = undefined;
 
 	        try {
 	          var _loop = function _loop() {
-	            var u = _step3.value;
+	            var u = _step6.value;
 	            var _layout$vertices$u = layout.vertices[u],
 	                x = _layout$vertices$u.x,
 	                y = _layout$vertices$u.y,
 	                width = _layout$vertices$u.width,
 	                height = _layout$vertices$u.height;
 
-	            var _graph$vertex = graph.vertex(u),
+	            var _graph$vertex = _this2.graph.vertex(u),
 	                text = _graph$vertex.text;
 
-	            withTransform(ctx, function () {
+	            withContext(ctx, function () {
 	              ctx.translate(x, y);
 	              ctx.textAlign = 'center';
+	              withContext(ctx, function () {
+	                ctx.fillStyle = u.toString() === _this2.highlightedVertex ? 'red' : 'white';
+	                renderRect(ctx, 0, 0, width, height);
+	              });
+	              if (ctx.addHitRegion) {
+	                ctx.addHitRegion({ id: u });
+	              }
 	              ctx.fillText(text, 0, 4);
-	              renderRect(ctx, u, 0, 0, width, height);
 	            });
 	          };
 
-	          for (var _iterator3 = graph.vertices()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	          for (var _iterator6 = _this2.graph.vertices()[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
 	            _loop();
 	          }
 	        } catch (err) {
-	          _didIteratorError3 = true;
-	          _iteratorError3 = err;
+	          _didIteratorError6 = true;
+	          _iteratorError6 = err;
 	        } finally {
 	          try {
-	            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-	              _iterator3.return();
+	            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+	              _iterator6.return();
 	            }
 	          } finally {
-	            if (_didIteratorError3) {
-	              throw _iteratorError3;
+	            if (_didIteratorError6) {
+	              throw _iteratorError6;
 	            }
 	          }
 	        }
 
-	        var _iteratorNormalCompletion4 = true;
-	        var _didIteratorError4 = false;
-	        var _iteratorError4 = undefined;
+	        var _iteratorNormalCompletion7 = true;
+	        var _didIteratorError7 = false;
+	        var _iteratorError7 = undefined;
 
 	        try {
-	          for (var _iterator4 = graph.edges()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-	            var _step4$value = _slicedToArray(_step4.value, 2),
-	                _u = _step4$value[0],
-	                v = _step4$value[1];
+	          for (var _iterator7 = _this2.graph.edges()[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+	            var _step7$value = _slicedToArray(_step7.value, 2),
+	                _u = _step7$value[0],
+	                v = _step7$value[1];
 
 	            var points = layout.edges[_u][v].points;
 
 	            renderPath(ctx, points);
 	          }
 	        } catch (err) {
-	          _didIteratorError4 = true;
-	          _iteratorError4 = err;
+	          _didIteratorError7 = true;
+	          _iteratorError7 = err;
 	        } finally {
 	          try {
-	            if (!_iteratorNormalCompletion4 && _iterator4.return) {
-	              _iterator4.return();
+	            if (!_iteratorNormalCompletion7 && _iterator7.return) {
+	              _iterator7.return();
 	            }
 	          } finally {
-	            if (_didIteratorError4) {
-	              throw _iteratorError4;
+	            if (_didIteratorError7) {
+	              throw _iteratorError7;
 	            }
 	          }
 	        }
+
+	        window.requestAnimationFrame(render);
 	      };
 	      render();
+	    }
+	  }, {
+	    key: 'layout',
+	    value: function layout() {
+	      var layouter = new _sugiyama2.default().vertexWidth(function () {
+	        return 150;
+	      }).vertexHeight(function () {
+	        return 20;
+	      }).layerMargin(50).vertexMargin(30);
+	      var layoutResult = layouter.layout(this.graph);
+	      var _iteratorNormalCompletion8 = true;
+	      var _didIteratorError8 = false;
+	      var _iteratorError8 = undefined;
+
+	      try {
+	        for (var _iterator8 = this.graph.edges()[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+	          var _step8$value = _slicedToArray(_step8.value, 2),
+	              _u2 = _step8$value[0],
+	              v = _step8$value[1];
+
+	          var points = layoutResult.edges[_u2][v].points;
+
+	          while (points.length < 6) {
+	            points.push(points[points.length - 1]);
+	          }
+	        }
+	      } catch (err) {
+	        _didIteratorError8 = true;
+	        _iteratorError8 = err;
+	      } finally {
+	        try {
+	          if (!_iteratorNormalCompletion8 && _iterator8.return) {
+	            _iterator8.return();
+	          }
+	        } finally {
+	          if (_didIteratorError8) {
+	            throw _iteratorError8;
+	          }
+	        }
+	      }
+
+	      this.previousLayoutResult = diff(this.layoutResult, layoutResult);
+	      this.layoutResult = layoutResult;
+	      this.layoutTime = new Date();
+	      return this;
 	    }
 	  }, {
 	    key: 'resize',
 	    value: function resize(width, height) {
 	      this.canvas.width = width;
 	      this.canvas.height = height;
+	      return this;
+	    }
+	  }, {
+	    key: 'center',
+	    value: function center() {
+	      var _layoutRect = layoutRect(this.layoutResult),
+	          layoutWidth = _layoutRect.layoutWidth,
+	          layoutHeight = _layoutRect.layoutHeight;
+
+	      var _centerTransform = centerTransform(layoutWidth, layoutHeight, this.canvas.width, this.canvas.height, this.margin),
+	          x = _centerTransform.x,
+	          y = _centerTransform.y,
+	          k = _centerTransform.k;
+
+	      this.zoom.transform(d3.select(this.canvas), d3.zoomIdentity.translate(x, y).scale(k));
 	    }
 	  }]);
 

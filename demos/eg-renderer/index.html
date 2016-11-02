@@ -9,10 +9,25 @@
 body {
   margin: 0;
 }
+
+.control {
+  position: absolute;
+  height: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: gray;
+}
 </style>
 </head>
 <body>
 <eg-renderer id="renderer"></eg-renderer>
+<div class="control">
+  <button id="hoge1">hoge1</button>
+  <button id="hoge2">hoge2</button>
+  <button id="hoge3">hoge3</button>
+  <button id="center">center</button>
+</div>
 <script>
 const renderer = document.getElementById('renderer')
 
@@ -20,13 +35,55 @@ window.addEventListener('WebComponentsReady', () => {
   fetch('data.json')
     .then((response) => response.json())
     .then((data) => {
-      renderer.resize(window.innerWidth - 15, window.innerHeight - 15)
-      renderer.render(data)
+      for (const {u, d} of data.vertices) {
+        renderer.graph.addVertex(u, d)
+      }
+      for (const {u, v, d} of data.edges) {
+        renderer.graph.addEdge(u, v, d)
+      }
+      renderer
+        .resize(window.innerWidth - 15, window.innerHeight - 15)
+        .layout()
+        .center()
     })
 })
 
 window.addEventListener('resize', (event) => {
   renderer.resize(window.innerWidth - 15, window.innerHeight - 15)
+})
+
+document.getElementById('hoge1').addEventListener('click', (event) => {
+  const {graph} = renderer
+  const u = 'key' + Math.random()
+  const v = 'key' + Math.random()
+  graph.addVertex(u, {text: u})
+  graph.addVertex(v, {text: v})
+  graph.addEdge(u, v)
+  renderer.layout()
+})
+
+document.getElementById('hoge2').addEventListener('click', (event) => {
+  const {graph} = renderer
+  if (graph.numVertices() > 0) {
+    const u = graph.vertices()[0]
+    graph.removeVertex(u)
+    renderer.layout()
+  }
+})
+
+document.getElementById('hoge3').addEventListener('click', (event) => {
+  const {graph} = renderer
+  if (graph.numVertices() > 0) {
+    const u = graph.vertices()[0]
+    const v = 'key' + Math.random()
+    graph.addVertex(v, {text: v})
+    graph.addEdge(u, v)
+    renderer.layout()
+  }
+})
+
+document.getElementById('center').addEventListener('click', (event) => {
+  renderer.center()
 })
 </script>
 </body>
