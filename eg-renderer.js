@@ -66,11 +66,13 @@
 
 	var _arcLayout = __webpack_require__(322);
 
-	var _centering = __webpack_require__(323);
+	var _circularLayout = __webpack_require__(323);
 
-	var _interpolate = __webpack_require__(324);
+	var _centering = __webpack_require__(324);
 
-	var _render = __webpack_require__(325);
+	var _interpolate = __webpack_require__(325);
+
+	var _render = __webpack_require__(326);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -230,6 +232,9 @@
 	      switch (mode) {
 	        case 'arc':
 	          layoutResult = (0, _arcLayout.arcLayout)(graph);
+	          break;
+	        case 'circular':
+	          layoutResult = (0, _circularLayout.circularLayout)(graph);
 	          break;
 	        case 'hierarchy':
 	          layoutResult = layouter.layout(graph);
@@ -26177,6 +26182,70 @@
 /* 323 */
 /***/ function(module, exports) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var circularLayout = exports.circularLayout = function circularLayout(graph) {
+	  var layout = {
+	    vertices: {},
+	    edges: {}
+	  };
+	  var r = 500;
+	  var dtheta = Math.PI * 2 / graph.numVertices();
+	  var vertices = graph.vertices();
+	  for (var i = 0; i < vertices.length; ++i) {
+	    var u = vertices[i];
+	    layout.vertices[u] = {
+	      x: r * Math.cos(dtheta * i) + r,
+	      y: r * Math.sin(dtheta * i) + r,
+	      width: 20,
+	      height: 20
+	    };
+	    layout.edges[u] = {};
+	  }
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = graph.edges()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var _step$value = _slicedToArray(_step.value, 2),
+	          _u = _step$value[0],
+	          v = _step$value[1];
+
+	      layout.edges[_u][v] = {
+	        type: 'line',
+	        width: 1,
+	        points: [[layout.vertices[_u].x, layout.vertices[_u].y], [layout.vertices[v].x, layout.vertices[v].y]]
+	      };
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  return layout;
+	};
+
+/***/ },
+/* 324 */
+/***/ function(module, exports) {
+
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
@@ -26219,7 +26288,7 @@
 	};
 
 /***/ },
-/* 324 */
+/* 325 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -26442,7 +26511,7 @@
 	            var currentEdge = current.edges[u] && current.edges[u][v] && current.edges[u][v].type === nextEdge.type ? current.edges[u][v] : null;
 	            var du = current.vertices[u] || null;
 	            var dv = current.vertices[v] || null;
-	            if (nextEdge.type === 'arc') {
+	            if (nextEdge.type === 'arc' || nextEdge.type === 'line') {
 	              result.edges[u][v] = diffArcEdge(currentEdge, nextEdge, du, dv);
 	            }
 	            if (next.edges[u][v].type === 'hierarchy') {
@@ -26484,7 +26553,7 @@
 	};
 
 /***/ },
-/* 325 */
+/* 326 */
 /***/ function(module, exports) {
 
 	'use strict';
