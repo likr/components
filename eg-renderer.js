@@ -148,7 +148,7 @@
 	        var r = (now - p.layoutTime) / p.transitionDuration;
 	        var layout = (0, _interpolate.interpolateLayout)(p.previousLayoutResult, p.layoutResult, r);
 	        var ctx = p.canvas.getContext('2d');
-	        ctx.resetTransform();
+	        ctx.save();
 	        ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
 	        ctx.translate(p.transform.x, p.transform.y);
 	        ctx.scale(p.transform.k, p.transform.k);
@@ -210,6 +210,7 @@
 	          }
 	        }
 
+	        ctx.restore();
 	        window.requestAnimationFrame(render);
 	      };
 	      render();
