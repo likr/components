@@ -64,11 +64,13 @@
 
 	var _sugiyama2 = _interopRequireDefault(_sugiyama);
 
-	var _centering = __webpack_require__(322);
+	var _arcLayout = __webpack_require__(322);
 
-	var _interpolate = __webpack_require__(323);
+	var _centering = __webpack_require__(323);
 
-	var _render = __webpack_require__(324);
+	var _interpolate = __webpack_require__(324);
+
+	var _render = __webpack_require__(325);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -218,42 +220,53 @@
 	  }, {
 	    key: 'layout',
 	    value: function layout() {
+	      var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'hierarchy';
+
 	      var p = privates.get(this);
 	      var graph = p.graph,
 	          layouter = p.layouter;
 
-	      var layoutResult = layouter.layout(graph);
-	      var _iteratorNormalCompletion3 = true;
-	      var _didIteratorError3 = false;
-	      var _iteratorError3 = undefined;
+	      var layoutResult = void 0;
+	      switch (mode) {
+	        case 'arc':
+	          layoutResult = (0, _arcLayout.arcLayout)(graph);
+	          break;
+	        case 'hierarchy':
+	          layoutResult = layouter.layout(graph);
+	          var _iteratorNormalCompletion3 = true;
+	          var _didIteratorError3 = false;
+	          var _iteratorError3 = undefined;
 
-	      try {
-	        for (var _iterator3 = graph.edges()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-	          var _step3$value = _slicedToArray(_step3.value, 2),
-	              u = _step3$value[0],
-	              v = _step3$value[1];
+	          try {
+	            for (var _iterator3 = graph.edges()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+	              var _step3$value = _slicedToArray(_step3.value, 2),
+	                  u = _step3$value[0],
+	                  v = _step3$value[1];
 
-	          var points = layoutResult.edges[u][v].points;
+	              var points = layoutResult.edges[u][v].points;
 
-	          while (points.length < 6) {
-	            points.push(points[points.length - 1]);
+	              while (points.length < 6) {
+	                points.push(points[points.length - 1]);
+	              }
+	              layoutResult.edges[u][v].type = 'hierarchy';
+	            }
+	          } catch (err) {
+	            _didIteratorError3 = true;
+	            _iteratorError3 = err;
+	          } finally {
+	            try {
+	              if (!_iteratorNormalCompletion3 && _iterator3.return) {
+	                _iterator3.return();
+	              }
+	            } finally {
+	              if (_didIteratorError3) {
+	                throw _iteratorError3;
+	              }
+	            }
 	          }
-	        }
-	      } catch (err) {
-	        _didIteratorError3 = true;
-	        _iteratorError3 = err;
-	      } finally {
-	        try {
-	          if (!_iteratorNormalCompletion3 && _iterator3.return) {
-	            _iterator3.return();
-	          }
-	        } finally {
-	          if (_didIteratorError3) {
-	            throw _iteratorError3;
-	          }
-	        }
+
+	          break;
 	      }
-
 	      p.previousLayoutResult = (0, _interpolate.diff)(p.layoutResult, layoutResult);
 	      p.layoutResult = layoutResult;
 	      p.layoutTime = new Date();
@@ -26080,6 +26093,90 @@
 /* 322 */
 /***/ function(module, exports) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+	var arcLayout = exports.arcLayout = function arcLayout(graph) {
+	  var layout = {
+	    vertices: {},
+	    edges: {}
+	  };
+	  var offset = 0;
+	  var _iteratorNormalCompletion = true;
+	  var _didIteratorError = false;
+	  var _iteratorError = undefined;
+
+	  try {
+	    for (var _iterator = graph.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	      var u = _step.value;
+
+	      layout.vertices[u] = {
+	        x: offset,
+	        y: 0,
+	        width: 20,
+	        height: 20
+	      };
+	      offset += 100;
+	      layout.edges[u] = {};
+	    }
+	  } catch (err) {
+	    _didIteratorError = true;
+	    _iteratorError = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion && _iterator.return) {
+	        _iterator.return();
+	      }
+	    } finally {
+	      if (_didIteratorError) {
+	        throw _iteratorError;
+	      }
+	    }
+	  }
+
+	  var _iteratorNormalCompletion2 = true;
+	  var _didIteratorError2 = false;
+	  var _iteratorError2 = undefined;
+
+	  try {
+	    for (var _iterator2 = graph.edges()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	      var _step2$value = _slicedToArray(_step2.value, 2),
+	          _u = _step2$value[0],
+	          v = _step2$value[1];
+
+	      layout.edges[_u][v] = {
+	        type: 'arc',
+	        width: 1,
+	        points: [[layout.vertices[_u].x, layout.vertices[_u].y], [layout.vertices[v].x, layout.vertices[v].y]]
+	      };
+	    }
+	  } catch (err) {
+	    _didIteratorError2 = true;
+	    _iteratorError2 = err;
+	  } finally {
+	    try {
+	      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+	        _iterator2.return();
+	      }
+	    } finally {
+	      if (_didIteratorError2) {
+	        throw _iteratorError2;
+	      }
+	    }
+	  }
+
+	  return layout;
+	};
+
+/***/ },
+/* 323 */
+/***/ function(module, exports) {
+
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
@@ -26122,7 +26219,7 @@
 	};
 
 /***/ },
-/* 323 */
+/* 324 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -26242,6 +26339,74 @@
 	  return result;
 	};
 
+	var diffArcEdge = function diffArcEdge(current, next, du, dv) {
+	  if (current) {
+	    return current;
+	  } else if (du && dv) {
+	    return Object.assign({}, next, {
+	      points: [[du.x, du.y], [dv.x, dv.y]]
+	    });
+	  } else if (du) {
+	    var x = du.x,
+	        y = du.y;
+	    var points = next.points;
+
+	    return Object.assign({}, next, {
+	      points: [[x, y], [points[1][0], 0]]
+	    });
+	  } else if (dv) {
+	    var _x = dv.x,
+	        _y = dv.y;
+	    var _points = next.points;
+
+	    return Object.assign({}, next, {
+	      points: [[_points[1][0], 0], [_x, _y]]
+	    });
+	  } else {
+	    return Object.assign({}, next, {
+	      points: next.points.map(function (_ref3) {
+	        var _ref4 = _slicedToArray(_ref3, 1),
+	            x = _ref4[0];
+
+	        return [x, 0];
+	      })
+	    });
+	  }
+	};
+
+	var diffHierarchyEdge = function diffHierarchyEdge(current, next, du, dv) {
+	  if (current) {
+	    return current;
+	  } else if (du) {
+	    var x = du.x,
+	        y = du.y,
+	        width = du.width;
+	    var points = next.points;
+
+	    return Object.assign({}, next, {
+	      points: [[x + width / 2, y], [x + width / 2, y], [points[2][0], 0], [points[3][0], 0], [points[4][0], 0], [points[5][0], 0]]
+	    });
+	  } else if (dv) {
+	    var _x2 = dv.x,
+	        _y2 = dv.y,
+	        _width = dv.width;
+	    var _points2 = next.points;
+
+	    return Object.assign({}, next, {
+	      points: [[_points2[0][0], 0], [_points2[1][0], 0], [_points2[2][0], 0], [_points2[3][0], 0], [_x2 - _width / 2, _y2], [_x2 - _width / 2, _y2]]
+	    });
+	  } else {
+	    return Object.assign({}, next, {
+	      points: next.points.map(function (_ref5) {
+	        var _ref6 = _slicedToArray(_ref5, 1),
+	            x = _ref6[0];
+
+	        return [x, 0];
+	      })
+	    });
+	  }
+	};
+
 	var diff = exports.diff = function diff(current, next) {
 	  var vertices = Object.keys(next.vertices);
 	  var result = {
@@ -26272,38 +26437,16 @@
 	        for (var _iterator5 = vertices[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
 	          var v = _step5.value;
 
-	          if (next.edges[u][v]) {
-	            if (current.edges[u] && current.edges[u][v]) {
-	              result.edges[u][v] = current.edges[u][v];
-	            } else if (current.vertices[u]) {
-	              var _current$vertices$u = current.vertices[u],
-	                  x = _current$vertices$u.x,
-	                  y = _current$vertices$u.y,
-	                  width = _current$vertices$u.width;
-	              var points = next.edges[u][v].points;
-
-	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
-	                points: [[x + width / 2, y], [x + width / 2, y], [points[2][0], 0], [points[3][0], 0], [points[4][0], 0], [points[5][0], 0]]
-	              });
-	            } else if (current.vertices[v]) {
-	              var _current$vertices$v = current.vertices[v],
-	                  _x = _current$vertices$v.x,
-	                  _y = _current$vertices$v.y,
-	                  _width = _current$vertices$v.width;
-	              var _points = next.edges[u][v].points;
-
-	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
-	                points: [[_points[0][0], 0], [_points[1][0], 0], [_points[2][0], 0], [_points[3][0], 0], [_x - _width / 2, _y], [_x - _width / 2, _y]]
-	              });
-	            } else {
-	              result.edges[u][v] = Object.assign({}, next.edges[u][v], {
-	                points: next.edges[u][v].points.map(function (_ref3) {
-	                  var _ref4 = _slicedToArray(_ref3, 1),
-	                      x = _ref4[0];
-
-	                  return [x, 0];
-	                })
-	              });
+	          var nextEdge = next.edges[u][v];
+	          if (nextEdge) {
+	            var currentEdge = current.edges[u] && current.edges[u][v] && current.edges[u][v].type === nextEdge.type ? current.edges[u][v] : null;
+	            var du = current.vertices[u] || null;
+	            var dv = current.vertices[v] || null;
+	            if (nextEdge.type === 'arc') {
+	              result.edges[u][v] = diffArcEdge(currentEdge, nextEdge, du, dv);
+	            }
+	            if (next.edges[u][v].type === 'hierarchy') {
+	              result.edges[u][v] = diffHierarchyEdge(currentEdge, nextEdge, du, dv);
 	            }
 	          }
 	        }
@@ -26341,7 +26484,7 @@
 	};
 
 /***/ },
-/* 324 */
+/* 325 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -26451,8 +26594,23 @@
 	  ctx.stroke();
 	};
 
+	var renderArcEdge = function renderArcEdge(ctx, points) {
+	  var dx = points[1][0] - points[0][0];
+	  var dy = points[1][1] - points[0][1];
+	  var r = Math.sqrt(dx * dx + dy + dy) / 2;
+	  var cx = (points[0][0] + points[1][0]) / 2;
+	  var cy = (points[0][1] + points[1][1]) / 2;
+	  var theta = Math.atan(dy / dx);
+	  ctx.beginPath();
+	  ctx.arc(cx, cy, r, theta, theta + Math.PI);
+	  ctx.stroke();
+	};
+
 	var renderEdge = exports.renderEdge = function renderEdge(ctx, points, type) {
 	  switch (type) {
+	    case 'arc':
+	      renderArcEdge(ctx, points);
+	      break;
 	    case 'curve':
 	      renderCurveEdge(ctx, points);
 	      break;
