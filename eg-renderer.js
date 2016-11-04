@@ -161,12 +161,13 @@
 	        ctx.translate(p.transform.x, p.transform.y);
 	        ctx.scale(p.transform.k, p.transform.k);
 	        ctx.translate(p.margin, p.margin);
+	        var vertices = p.graph.vertices();
 	        var _iteratorNormalCompletion = true;
 	        var _didIteratorError = false;
 	        var _iteratorError = undefined;
 
 	        try {
-	          for (var _iterator = p.graph.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	          for (var _iterator = vertices[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	            var u = _step.value;
 
 	            (0, _render.renderVertex)(ctx, Object.assign({}, layout.vertices[u], {
@@ -195,14 +196,16 @@
 	        var _iteratorError2 = undefined;
 
 	        try {
-	          for (var _iterator2 = p.graph.edges()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	            var _step2$value = _slicedToArray(_step2.value, 2),
-	                _u = _step2$value[0],
-	                v = _step2$value[1];
+	          for (var _iterator2 = vertices[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+	            var _u = _step2.value;
 
-	            var points = layout.edges[_u][v].points;
+	            for (var v in layout.edges[_u]) {
+	              if (layout.edges[_u][v]) {
+	                var points = layout.edges[_u][v].points;
 
-	            (0, _render.renderEdge)(ctx, points, p.edgeType);
+	                (0, _render.renderEdge)(ctx, points, p.edgeType);
+	              }
+	            }
 	          }
 	        } catch (err) {
 	          _didIteratorError2 = true;
