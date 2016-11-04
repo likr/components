@@ -129,7 +129,11 @@
 	        layoutTime: 0,
 	        layouter: new _sugiyama2.default(),
 	        edgeType: 'curve',
-	        vertexType: 'rect'
+	        vertexType: 'rect',
+	        vertexText: function vertexText(_ref) {
+	          var d = _ref.d;
+	          return d.text;
+	        }
 	      };
 	      privates.set(this, p);
 
@@ -165,8 +169,9 @@
 	          for (var _iterator = p.graph.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 	            var u = _step.value;
 
-	            (0, _render.renderVertex)(ctx, Object.assign({}, p.graph.vertex(u), layout.vertices[u], {
+	            (0, _render.renderVertex)(ctx, Object.assign({}, layout.vertices[u], {
 	              u: u,
+	              text: p.vertexText({ u: u, d: p.graph.vertex(u) }),
 	              fillColor: u.toString() === p.highlightedVertex ? 'red' : 'white'
 	            }), p.vertexType);
 	          }
@@ -331,6 +336,11 @@
 	    key: 'edgeType',
 	    value: function edgeType() {
 	      return accessor(this, 'edgeType', arguments);
+	    }
+	  }, {
+	    key: 'vertexText',
+	    value: function vertexText() {
+	      return accessor(this, 'vertexText', arguments);
 	    }
 	  }]);
 
@@ -10209,8 +10219,10 @@
 	    if (ctx.addHitRegion) {
 	      ctx.addHitRegion({ id: u });
 	    }
-	    ctx.textAlign = 'center';
-	    ctx.fillText(text, 0, 4);
+	    if (text) {
+	      ctx.textAlign = 'center';
+	      ctx.fillText(text, 0, 4);
+	    }
 	  });
 	};
 
@@ -10237,8 +10249,10 @@
 	    if (ctx.addHitRegion) {
 	      ctx.addHitRegion({ id: u });
 	    }
-	    ctx.textAlign = 'center';
-	    ctx.fillText(text, 0, 4);
+	    if (text) {
+	      ctx.textAlign = 'center';
+	      ctx.fillText(text, 0, 4);
+	    }
 	  });
 	};
 
